@@ -75,11 +75,12 @@ fi
 # --- 5. Initialize observation/intuition base records ---
 if [[ ! -f /vault/intuition/index.md ]]; then
     echo "[init] Creating intuition index..."
-    cat > /vault/intuition/index.md <<'EOF'
+    CREATED_DATE=$(date -u +%Y-%m-%dT%H:%M:%S)
+    cat > /vault/intuition/index.md <<EOF
 ---
 type: note
 name: Intuition Index
-created: $(date -u +%Y-%m-%dT%H:%M:%S)
+created: $CREATED_DATE
 ---
 
 # Intuition Index
