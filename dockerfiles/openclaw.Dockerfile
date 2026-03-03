@@ -35,11 +35,18 @@ RUN cp -a /openclaw-src/. /app/ && rm -rf /openclaw-src
 WORKDIR /app
 RUN chown -R node:node /app
 
-# Pre-download qmd GGUF models into a shared cache so the first embed
-# run in the container doesn't hit HuggingFace cold-start delays.
-# This runs as root during image build; at runtime qmd uses XDG dirs
-# set by OpenClaw under /home/node/.openclaw/agents/<id>/qmd/.
-RUN bun /root/.bun/install/global/node_modules/qmd/src/qmd.ts status 2>/dev/null || true
+# Make qmd + bun accessible to the node user at runtime.
+# bun is installed to /root/.bun/ but the container runs as USER node.
+# Symlink qmd to /usr/local/bin and open read+exec on the bun tree.
+RUN ln -s /root/.bun/install/global/node_modules/qmd/qmd /usr/local/bin/qmd && \
+    chmod +x /usr/local/bin/qmd && \
+    chmod -R a+rX /root/.bun
+
+# Pre-download qmd GGUF models into node user's cache so the first
+# embed run doesn't hit HuggingFace cold-start delays.
+RUN mkdir -p /home/node/.cache/qmd && \
+    chown -R node:node /home/node/.cache && \
+    su node -c "qmd status" 2>/dev/null || true
 
 USER node
 
