@@ -13,13 +13,14 @@ else
     echo "[init] Vault already scaffolded, skipping"
 fi
 
-# Ensure all entity dirs exist
+# Ensure all entity dirs exist (including alfred-learn folders)
 ENTITY_DIRS=(
     person project org location process
-    inbox inbox/processed
+    inbox inbox/processed inbox/_quarantine
     account asset conversation note
     decision assumption constraint contradiction synthesis
     event dashboard view
+    observation intuition/instincts reflection
 )
 for dir in "${ENTITY_DIRS[@]}"; do
     mkdir -p "/vault/$dir"
@@ -71,7 +72,28 @@ else
     echo "[init] Using provided gateway token"
 fi
 
-# --- 5. Fix permissions ---
+# --- 5. Initialize observation/intuition base records ---
+if [[ ! -f /vault/intuition/index.md ]]; then
+    echo "[init] Creating intuition index..."
+    cat > /vault/intuition/index.md <<'EOF'
+---
+type: note
+name: Intuition Index
+created: $(date -u +%Y-%m-%dT%H:%M:%S)
+---
+
+# Intuition Index
+
+Master index of all learned routing patterns (instincts).
+
+## Active Instincts
+
+(Will be populated as the learning engine observes routing decisions)
+
+EOF
+fi
+
+# --- 6. Fix permissions ---
 # OpenClaw runs as uid 1000 (node user)
 chown -R 1000:1000 /openclaw-state 2>/dev/null || true
 chown -R 1000:1000 /vault 2>/dev/null || true
