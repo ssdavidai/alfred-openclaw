@@ -36,10 +36,12 @@ WORKDIR /app
 RUN chown -R node:node /app
 
 # Make qmd + bun accessible to the node user at runtime.
-# bun is installed to /root/.bun/ but the container runs as USER node.
-# Open the bun tree for read+exec, then symlink qmd into PATH.
-RUN chmod -R a+rX /root/.bun && \
-    ln -s /root/.bun/install/global/node_modules/qmd/qmd /usr/local/bin/qmd
+# /root/ has mode 700 so the node user can't traverse it.
+# Copy the entire bun+qmd install to /opt/bun (world-readable).
+RUN cp -a /root/.bun /opt/bun && \
+    chmod -R a+rX /opt/bun && \
+    ln -sf /opt/bun/install/global/node_modules/qmd/qmd /usr/local/bin/qmd && \
+    ln -sf /opt/bun/bin/bun /usr/local/bin/bun
 
 # Pre-download qmd GGUF models into node user's cache so the first
 # embed run doesn't hit HuggingFace cold-start delays.
